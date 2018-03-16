@@ -49,7 +49,7 @@ public func routes(_ router: Router) throws {
         }
         
         for i in (inList.inList?.indices)!{
-            inList.inList![i].asciiArray
+            inList.inList![i].map{$0.asciiValue}
         }
         
         print(inList.inList![0].asciiArray)
