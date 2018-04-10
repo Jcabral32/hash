@@ -1,16 +1,15 @@
 import Routing
 import Vapor
+import Foundation
 
-/// Register your application's routes here.
-///
-/// [Learn More →](https://docs.vapor.codes/3.0/getting-started/structure/#routesswift)
-
+//Jean Cabral 001167363
 
 extension String {
     var asciiArray: [UInt32] {
         return unicodeScalars.filter{$0.isASCII}.map{$0.value}
     }
 }
+// Create a custom CharacterSet comprised of the lowercase values [a-z] and compare the elements in the strings to the elements in the set.
 
 extension Character{
     var asciiValue: UInt32?{
@@ -18,103 +17,117 @@ extension Character{
     }
 }
 
-
+// Model For JSON Input
 struct Input:Encodable,Content {
-    var inList: [String]?
+        var inList: [String]?
 }
 
+// Model for JSON Response
 struct Output:Encodable,Content {
     let outList: [[String]]
 }
-// Add the HashSet Code
-public struct HashSet<T: Hashable> {
-    private var dictionary = Dictionary<T, Bool>()
+
+/* This function takes a String and Returns an array of charcaters composed of the unique lowercase letters that were in the string.
+ Ex: Input--> Boboi   : Output--> boi     Is Working!
+ */
+
+public func gimmeLowerCase(input: String)->String {
     
-    public mutating func insert(element: T) {
-        dictionary[element] = true
+    let lowercaseLetters = input.lowercased()
+    
+    // let lowercaseLetters = input.filter {"abcdefghijklmnopqrstuvwxyz".contains($0)}
+    var uniqueLowerCaseLetters = Set<Character>()
+    
+    for chars in lowercaseLetters.indices{
+    uniqueLowerCaseLetters.insert(lowercaseLetters[chars])
     }
     
-    public mutating func remove(element: T) {
-        dictionary[element] = nil
-    }
-    
-    public func contains(element: T) -> Bool {
-        return dictionary[element] != nil
-    }
-    
-    public func allElements() -> [T] {
-        return Array(dictionary.keys)
-    }
-    
-    public var count: Int {
-        return dictionary.count
-    }
-    
-    public var isEmpty: Bool {
-        return dictionary.isEmpty
-    }
+    let output = String(uniqueLowerCaseLetters)
+    return output
 }
 
-extension HashSet {
-    public func union(otherSet: HashSet<T>) -> HashSet<T> {
-        var combined = HashSet<T>()
-        for obj in dictionary.keys {
-            combined.insert(element: obj)
-        }
-        for obj in otherSet.dictionary.keys {
-            combined.insert(element: obj)
-        }
-        return combined
-    }
+public func createArrayAndAppend(element: String)-> [String]{
+     var returnArray = [String]()
     
-    public func intersect(otherSet: HashSet<T>) -> HashSet<T> {
-        var common = HashSet<T>()
-        for obj in dictionary.keys {
-            if otherSet.contains(element: obj) {
-                common.insert(element: obj)
-            }
-        }
-        return common
-    }
+    returnArray.append(element)
     
-    public func difference(otherSet: HashSet<T>) -> HashSet<T> {
-        var diff = HashSet<T>()
-        for obj in dictionary.keys {
-            if !otherSet.contains(element: obj) {
-                diff.insert(element: obj)
-            }
-        }
-        return diff
-    }
+    return returnArray
+}
+
+
+// Returns the HashValue of a String by summing the ASCII Values of the unique lowercase letters IS WORKING!
+public func getHash(string: String)-> Int {
+    var tempArray = [UInt32]()
+    tempArray = gimmeLowerCase(input: string).asciiArray
+    let sum = tempArray.reduce(0,+)
+    return Int(sum)
 }
 
 
 public func routes(_ router: Router) throws {
     
     
-    router.post("hash") { req -> Input in
+    router.post("hash") { req -> Output in
         
         // Put the post request content into our Input object
         let data = try req.content.decode(Input.self).await(on: req)
         let blankArray = [String]()
-        var inList = Input(inList: blankArray)
+        var input = Input(inList: blankArray)
         
-        // This line
-        for strings in (data.inList?.indices)!{
-            inList.inList?.append(data.inList![strings])
-        }
-        
-        for i in (inList.inList?.indices)!{
-            inList.inList![i].map{$0.asciiValue}
-        }
-        
-        print(inList.inList![0].asciiArray)
+        // Holds the Hashes
+        var keyArray = [Int]()
        
+        // Remove the duplicate values from the array.
         
         
-        return inList
+        // Creates a New Input Object and gives it the value of the Respons
+        for strings in (data.inList?.indices)!{
+            input.inList?.append(data.inList![strings])
+        }
         
+        
+        // Array to give our OutList Object
+        var outputArray = [[String]]()
+       
+        // Adds the hashes to the array
+        for i in (input.inList?.indices)!{
+         keyArray.append(getHash(string: input.inList![i]))
+            }
+        // Reverse the order
+        keyArray.reverse()
+        
+        let duplicates = Array(Set(keyArray.filter({ (i: Int) in keyArray.filter({ $0 == i }).count > 1})))
+        print(duplicates)
+        
+        
+        
+        for i in (input.inList?.indices)!{
+            if(duplicates.contains(getHash(string: input.inList![i]))){
+              outputArray.append(createArrayAndAppend(element:input.inList![i]))
+            }
+        }
+        
+        var newOutputArray = [[String]]()
+        
+        
+        for j in outputArray.indices{
+            
+        }
+    
+        
+        
+        
+        print(keyArray)
+        //outputArray.append(createArrayAndAppend(element:))
+        let out = Output(outList: outputArray)
+        
+        return out
+        }
+        
+    
         
     }
 
-}
+
+
+//stringArray.append(dictionary[getHash(string:gimmeLowerCase(input: input.inList![strings]))] as! String)
